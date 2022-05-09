@@ -44,6 +44,11 @@ const config = defineUserConfig<DefaultThemeOptions, ViteBundlerOptions>({
       define: {
         "process.env.NODE_DEBUG": false,
       },
+      resolve: {
+        alias: {
+          "node:stream": "stream-browserify",
+        },
+      },
     },
   },
 

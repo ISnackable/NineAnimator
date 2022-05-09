@@ -9,16 +9,24 @@ export default defineComponent({
   props: {
     userBackup: Object as PropType<NineAnimatorBackup[]>,
   },
+  mounted() {
+    this.exportUserBackup = this.userBackup;
+  },
   data() {
     return {
       exportUserBackup: [] as NineAnimatorBackup[] | undefined,
     };
   },
-  mounted() {
-    this.exportUserBackup = this.userBackup;
+  watch: {
+    $props: {
+      handler() {
+        this.exportUserBackup = this.userBackup;
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   methods: {
-    // Performance heavy function 😢, should only be used if needed, eg. exporting to JSON
     async recursiveParsePlist(object: any[] | Buffer): Promise<any[]> {
       if (Buffer.isBuffer(object)) {
         object = await bplistParser.parseFile(object);
@@ -39,23 +47,24 @@ export default defineComponent({
 
     async handleExport(type: string) {
       if (this.userBackup?.length) {
+        this.exportUserBackup = this.userBackup;
         var userBackupBuf;
 
         try {
-          this.exportUserBackup![0]["exportedDate"] = new Date();
+          this.exportUserBackup[0]["exportedDate"] = new Date();
 
           if (type === "bplist") {
             // Creating the Plist buffer
-            userBackupBuf = await bplistCreator(this.exportUserBackup!);
+            userBackupBuf = await bplistCreator(this.exportUserBackup);
           } else if (type === "JSON") {
             userBackupBuf = await this.recursiveParsePlist(
-              this.exportUserBackup!
+              this.exportUserBackup
             );
           }
           // Creating the file
           this.downloadBlob(
             type === "bplist" ? userBackupBuf : JSON.stringify(userBackupBuf),
-            `${String(this.exportUserBackup![0]["exportedDate"])}.${
+            `${String(this.exportUserBackup[0]["exportedDate"])}.${
               type === "bplist" ? "naconfig" : "json"
             }`,
             type === "bplist" ? "application/octet-stream" : "application/json"
